@@ -88,6 +88,15 @@ resource "aws_s3_bucket" "pes" {
   }
 }
 
+resource "aws_db_subnet_group" "ptfe_db" {
+  name       = "${var.db_subnet_group_name}"
+  subnet_ids = ["${var.subnet_ids}"]
+
+  tags = {
+    Name = "${var.db_subnet_group_name}"
+  }
+}
+
 resource "aws_db_instance" "pes" {
   allocated_storage         = 10
   engine                    = "postgres"
@@ -98,7 +107,7 @@ resource "aws_db_instance" "pes" {
   storage_type              = "gp2"
   username                  = "ptfe"
   password                  = "${var.database_pwd}"
-  db_subnet_group_name      = "${var.db_subnet_group_name}"
+  db_subnet_group_name      = "${aws_db_subnet_group.ptfe_db.name}"
   vpc_security_group_ids    = ["${var.vpc_security_group_ids}"]
   final_snapshot_identifier = "${local.namespace}-ptfe-db-instance-final-snapshot"
 }
