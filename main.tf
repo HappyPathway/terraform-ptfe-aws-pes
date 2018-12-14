@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------
 
 locals {
-  namespace = "${var.namespace}-pes"
+  namespace = "${var.namespace}"
 }
 
 data "aws_ami" "ubuntu" {
@@ -62,16 +62,21 @@ resource "aws_eip" "pes" {
   vpc      = true
 }
 
+data "aws_route53_zone" "selected" {
+  name         = "${var.route53_zone}"
+  private_zone = "${var.private_route53_zone}"
+}
+
 resource "aws_route53_record" "pes" {
-  zone_id = "${var.hashidemos_zone_id}"
-  name    = "${local.namespace}.hashidemos.io."
+  zone_id = "${data.aws_route53_zone.selected.zone_id}"
+  name    = "${local.namespace}.${data.aws_route53_zone.selected.name}"
   type    = "A"
   ttl     = "300"
   records = ["${aws_eip.pes.public_ip}"]
 }
 
 resource "aws_s3_bucket" "pes" {
-  bucket = "${local.namespace}-s3-bucket"
+  bucket = "${local.namespace}-ptfe-blobstorage"
   acl    = "private"
 
   versioning {
@@ -79,7 +84,7 @@ resource "aws_s3_bucket" "pes" {
   }
 
   tags {
-    Name = "${local.namespace}-s3-bucket"
+    Name = "${local.namespace}-ptfe-blobstorage"
   }
 }
 
@@ -88,14 +93,14 @@ resource "aws_db_instance" "pes" {
   engine                    = "postgres"
   engine_version            = "9.4"
   instance_class            = "db.t2.medium"
-  identifier                = "${local.namespace}-db-instance"
+  identifier                = "${local.namespace}-ptfe-db"
   name                      = "ptfe"
   storage_type              = "gp2"
   username                  = "ptfe"
   password                  = "${var.database_pwd}"
   db_subnet_group_name      = "${var.db_subnet_group_name}"
   vpc_security_group_ids    = ["${var.vpc_security_group_ids}"]
-  final_snapshot_identifier = "${local.namespace}-db-instance-final-snapshot"
+  final_snapshot_identifier = "${local.namespace}-ptfe-db-instance-final-snapshot"
 }
 
 #------------------------------------------------------------------------------
