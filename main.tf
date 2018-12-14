@@ -42,7 +42,7 @@ resource "aws_instance" "pes" {
   subnet_id              = "${element(var.subnet_ids, count.index)}"
   vpc_security_group_ids = ["${var.vpc_security_group_ids}"]
   key_name               = "${var.ssh_key_name}"
-  user_data              = "${file("user-data.tpl)")}"
+  user_data              = "${data.template_file.user_data.rendered}"
   iam_instance_profile   = "${aws_iam_instance_profile.ptfe.name}"
 
   root_block_device {
