@@ -3,7 +3,6 @@ variable "aws_instance_type" {}
 variable "ssh_key_name" {}
 variable "owner" {}
 variable "ttl" {}
-variable "user_data" {}
 
 variable "subnet_ids" {
   type = "list"

@@ -22,6 +22,19 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
+resource "random_pet" "replicated-pwd" {
+  length = 2
+}
+
+data "template_file" "user_data" {
+  template = "${file("${path.module}/user-data.tpl")}"
+
+  vars {
+    hostname       = "${var.namespace}.hashidemos.io"
+    replicated_pwd = "${random_pet.replicated-pwd.id}"
+  }
+}
+
 resource "aws_instance" "pes" {
   count                  = 2
   ami                    = "${data.aws_ami.ubuntu.id}"
@@ -29,7 +42,7 @@ resource "aws_instance" "pes" {
   subnet_id              = "${element(var.subnet_ids, count.index)}"
   vpc_security_group_ids = ["${var.vpc_security_group_ids}"]
   key_name               = "${var.ssh_key_name}"
-  user_data              = "${var.user_data}"
+  user_data              = "${file("user-data.tpl)")}"
   iam_instance_profile   = "${aws_iam_instance_profile.ptfe.name}"
 
   root_block_device {
